@@ -1,0 +1,91 @@
+Description: Get source building on Hurd
+ - Look for <sys/user.h> before using it.
+ - Define MAXHOSTNAMELEN to 64 if missing.
+ - Bind sockets on Hurd like on Linux.
+Author: Petter Reinholdtsen <pere@hungry.com>
+
+Index: libtirpc-0.2.5/configure.ac
+===================================================================
+--- libtirpc-0.2.5.orig/configure.ac
++++ libtirpc-0.2.5/configure.ac
+@@ -24,11 +24,11 @@ if test "x$enable_ipv6" != xno; then
+ fi
+ 
+ AC_PROG_CC
+-m4_pattern_allow(AM_CONFIG_HEADERS(config.h))
++AM_CONFIG_HEADER(config.h)
+ AC_PROG_LIBTOOL
+ AC_HEADER_DIRENT
+ AC_PREFIX_DEFAULT(/usr)
+-AC_CHECK_HEADERS([arpa/inet.h fcntl.h libintl.h limits.h locale.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h syslog.h unistd.h])
++AC_CHECK_HEADERS([arpa/inet.h fcntl.h libintl.h limits.h locale.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h syslog.h unistd.h sys/user.h])
+ AC_CHECK_LIB([pthread], [pthread_create])
+ AC_CHECK_LIB([nsl], [yp_get_default_domain])
+ 
+Index: libtirpc-0.2.5/src/auth_unix.c
+===================================================================
+--- libtirpc-0.2.5.orig/src/auth_unix.c
++++ libtirpc-0.2.5/src/auth_unix.c
+@@ -57,6 +57,11 @@
+ #include <rpc/auth.h>
+ #include <rpc/auth_unix.h>
+ 
++/* Workaround for Hurd */
++#ifndef MAXHOSTNAMELEN
++#  define MAXHOSTNAMELEN   64
++#endif
++
+ /* auth_unix.c */
+ static void authunix_nextverf (AUTH *);
+ static bool_t authunix_marshal (AUTH *, XDR *);
+Index: libtirpc-0.2.5/src/bindresvport.c
+===================================================================
+--- libtirpc-0.2.5.orig/src/bindresvport.c
++++ libtirpc-0.2.5/src/bindresvport.c
+@@ -61,7 +61,7 @@ bindresvport(sd, sin)
+         return bindresvport_sa(sd, (struct sockaddr *)sin);
+ }
+ 
+-#ifdef __linux__
++#if defined(__linux__) || defined(__GNU__)
+ 
+ #define STARTPORT 600
+ #define LOWPORT 512
+Index: libtirpc-0.2.5/src/getpeereid.c
+===================================================================
+--- libtirpc-0.2.5.orig/src/getpeereid.c
++++ libtirpc-0.2.5/src/getpeereid.c
+@@ -24,12 +24,16 @@
+  * SUCH DAMAGE.
+  */
+ 
++#include "config.h"
++
+ #include <sys/cdefs.h>
+ 
+ #include <sys/param.h>
+ #include <sys/socket.h>
+ #include <sys/un.h>
+-#include <sys/user.h>
++#ifdef HAVE_SYS_USER_H
++#  include <sys/user.h>
++#endif /* HAVE_SYS_USER_H */
+ 
+ #include <errno.h>
+ #include <unistd.h>
+@@ -37,6 +41,9 @@
+ int
+ getpeereid(int s, uid_t *euid, gid_t *egid)
+ {
++#ifndef HAVE_SYS_USER_H
++        return(-1);
++#else
+ #ifdef XUCRED_VERSION
+ 	struct xucred uc;
+ #define uid  cr_uid
+@@ -60,4 +67,5 @@ getpeereid(int s, uid_t *euid, gid_t *eg
+ 	*euid = uc.uid;
+ 	*egid = uc.gid;
+ 	return (0);
++#endif /* HAVE_SYS_USER_H */
+  }
