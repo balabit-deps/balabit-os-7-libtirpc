@@ -1,3 +1,11 @@
+libtirpc (0.2.5-1.2ubuntu0.1) bionic-security; urgency=medium
+
+  * SECURITY UPDATE: Denial of service
+    - debian/patches/CVE-2018-14622.patch: fix in src/svc_c.c.
+    - CVE-2018-14622
+
+ -- Leonidas S. Barbosa <leo.barbosa@canonical.com>  Tue, 04 Sep 2018 12:01:47 -0300
+
 libtirpc (0.2.5-1.2) unstable; urgency=high
 
   * Non-maintainer upload.

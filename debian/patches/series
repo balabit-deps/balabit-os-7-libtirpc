@@ -5,3 +5,4 @@
 09-autogen.sh.diff
 10-CVE-2016-4429.diff
 11-CVE-2017-8779.diff
+CVE-2018-14622.patch

@@ -1,6 +1,7 @@
 Source: libtirpc
 Priority: standard
-Maintainer: Anibal Monsalve Salazar <anibal@debian.org>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Anibal Monsalve Salazar <anibal@debian.org>
 Build-Depends: debhelper (>= 9), autotools-dev, libtool, pkg-config, dh-autoreconf, libkrb5-dev
 Standards-Version: 3.9.8
 Section: libs
